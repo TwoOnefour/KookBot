@@ -1,0 +1,3 @@
+websockets
+urllib3
+requests
