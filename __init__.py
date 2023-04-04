@@ -85,6 +85,7 @@ class KookBot:
                         if self.message["d"]["code"] == 0:
                             print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
                             firstlogin = True
+                            # 登录以后写一个异步函数专门接受信息
                     self.looplist.clear()
                     self.flag = False
                     self.sendmessage = {
