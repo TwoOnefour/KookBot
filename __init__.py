@@ -58,7 +58,7 @@ class KookBot:
         return message
 
     def dealmessage(self, message):
-        if message["s"] == 1 or message["s"] == 4:
+        if message["s"] == 2 or message["s"] == 4:
             print("{}   发出消息：{}".format(str(datetime.datetime.now())[0:-7], message))
             # print("{}收到服务器发来的消息：{}".format(datetime.datetime.now(), message))
         else:
@@ -74,6 +74,7 @@ class KookBot:
                     if not firstlogin:
                         if not await self.waitmessage(websocket):
                             break # 写重连函数，先留空
+                        self.dealmessage(self.sendmessage)
                         if self.message["d"]["code"] == 0:
                             print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
                             firstlogin = True
