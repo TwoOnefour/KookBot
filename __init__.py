@@ -9,6 +9,7 @@ import urllib
 
 class KookBot:
     def __init__(self):
+        self.sendmessage = None
         self.client_Id = "gxoVp0ey_oU8skDD"
         self.client_Secret = "ZFrLRGLbQmLsszwq"
         self.token = "1/MTY1MTg=/L8iqnm2sB07wZDsajv9R4g=="
@@ -57,31 +58,36 @@ class KookBot:
         return message
 
     def dealmessage(self, message):
-        if message["s"] == 1:
-            print("{}收到服务器发来的消息：{}".format(datetime.datetime.now(), message))
+        if message["s"] == 1 or message["s"] == 4:
+            print("{}   发出消息：{}".format(str(datetime.datetime.now())[0:-7], message))
+            # print("{}收到服务器发来的消息：{}".format(datetime.datetime.now(), message))
         else:
-            print("{}发出消息：{}".format(datetime.datetime.now(), message))
+            print("{}   收到服务器发来的消息：{}".format(str(datetime.datetime.now())[0:-7], message))
 
     async def connection(self):
         while True:
+            firstlogin = False
             url = self.getgateway()
             async with websockets.connect(url) as websocket:
                 while True:
                     # self.getmessage(websocket)
-                    if not await self.waitmessage(websocket):
-                        break # 写重连函数，先留空
-                    if self.message["d"]["code"] == 0:
-                        print("{}Connection established. Hello, KOOK！".format(datetime.datetime.now()))
-                        self.sendmessage = {
-                            "s": 2,
-                            "sn": 0
-                        }
-                    time.sleep(5)
+                    if not firstlogin:
+                        if not await self.waitmessage(websocket):
+                            break # 写重连函数，先留空
+                        if self.message["d"]["code"] == 0:
+                            print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
+                            firstlogin = True
+                    self.sendmessage = {
+                        "s": 2,
+                        "sn": 0
+                    }
+                    time.sleep(30)
                     # ping
+                    self.dealmessage(self.sendmessage)
                     await websocket.send(json.dumps(self.sendmessage))
                     if not await self.waitmessage(websocket):
+                        # print()
                         break
-
 
     def connect(self):
         asyncio.get_event_loop().run_until_complete(self.connection())

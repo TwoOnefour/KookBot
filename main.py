@@ -1,5 +1,6 @@
 from __init__ import KookBot
-
+import urllib3
 if __name__ == "__main__":
-    bot = KookBot
+    urllib3.disable_warnings()
+    bot = KookBot()
     bot.connect()
