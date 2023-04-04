@@ -41,8 +41,9 @@ class KookBot:
         return self.postmessage("GET")["data"]["url"]
 
     async def waitmessage(self, websocket):
+        await asyncio.sleep(6)
         self.message = await self.getmessage(websocket)
-        time.sleep(6)
+        # time.sleep(6)
         # self.getmessage(websocket)
         if not self.message:
             print("Connection failed. Retry in 3 seconds")
@@ -74,7 +75,7 @@ class KookBot:
                     if not firstlogin:
                         if not await self.waitmessage(websocket):
                             break # 写重连函数，先留空
-                        self.dealmessage(self.sendmessage)
+                        # self.dealmessage(self.sendmessage)
                         if self.message["d"]["code"] == 0:
                             print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
                             firstlogin = True
@@ -82,7 +83,7 @@ class KookBot:
                         "s": 2,
                         "sn": 0
                     }
-                    time.sleep(30)
+                    await asyncio.sleep(24)
                     # ping
                     self.dealmessage(self.sendmessage)
                     await websocket.send(json.dumps(self.sendmessage))
