@@ -1,5 +1,5 @@
-from KookBot import KookBot
+from __init__ import KookBot
 
 if __name__ == "__main__":
-    bot = KookBot()
+    bot = KookBot
     bot.connect()
