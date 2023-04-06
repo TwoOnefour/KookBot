@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import json
 
 IP_ADDR = "127.0.0.1"
 IP_PORT = "8888"
@@ -27,6 +28,20 @@ async def clientSend(websocket):
         recv_text = await websocket.recv()
         print(f"{recv_text}")
 
+# 重连函数
+async def client_reconnect():
+    msg = websockets.recv(1024).decode('utf-8')
+    print(msg)
+    json_msg = json.loads(msg)
+    if json_msg['s']=='5':
+        gateway = IP_ADDR+IP_PORT
+        sn = 0
+        #message_queue = []
+        #清空本地消息队列
+
+        #关闭连接
+        websockets.close()
+    
 
 # 进行websocket连接
 async def clientRun():
@@ -36,9 +51,7 @@ async def clientRun():
 
         await clientSend(websocket)
 
-
 # main function
 if __name__ == '__main__':
     print("======client main begin======")
     asyncio.get_event_loop().run_until_complete(clientRun())
-
