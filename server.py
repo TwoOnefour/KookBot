@@ -21,7 +21,7 @@ async def serverHands(websocket):
                     "err": "Missing params"
                 }
             }))
-            return True
+
         else:
             await websocket.send("connected fail")
 

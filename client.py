@@ -10,10 +10,11 @@ IP_PORT = "8888"
 async def clientHands(websocket):
     while True:
         await websocket.send("hello")
-        response_str = await websocket.recv()
-        if "123" in response_str:
-            print("握手成功")
-            return True
+        break
+        # response_str = await websocket.recv()
+        # if "123" in response_str:
+        #     print("握手成功")
+        #     return True
 
 
 # 向服务器端发送消息
@@ -33,9 +34,10 @@ async def client_reconnect(websocket):
     msg = await websocket.recv()
     print(msg)
     json_msg = json.loads(msg)
-    if json_msg['s']=='5':
+    if json_msg['s']==5:
         gateway = IP_ADDR+IP_PORT
         sn = 0
+        print(json_msg["s"])
         #message_queue = []
         #清空本地消息队列
         #关闭连接
