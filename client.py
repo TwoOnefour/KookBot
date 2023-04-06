@@ -29,8 +29,8 @@ async def clientSend(websocket):
         print(f"{recv_text}")
 
 # 重连函数
-async def client_reconnect():
-    msg = websockets.recv(1024).decode('utf-8')
+async def client_reconnect(websocket):
+    msg = await websocket.recv()
     print(msg)
     json_msg = json.loads(msg)
     if json_msg['s']=='5':
@@ -38,9 +38,8 @@ async def client_reconnect():
         sn = 0
         #message_queue = []
         #清空本地消息队列
-
         #关闭连接
-        websockets.close()
+        websocket.close()
     
 
 # 进行websocket连接
@@ -48,8 +47,7 @@ async def clientRun():
     ipaddress = IP_ADDR + ":" + IP_PORT
     async with websockets.connect("ws://" + ipaddress) as websocket:
         await clientHands(websocket)
-
-        await clientSend(websocket)
+        await client_reconnect(websocket)
 
 # main function
 if __name__ == '__main__':
