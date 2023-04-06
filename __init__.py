@@ -11,6 +11,7 @@ import queue
 class KookBot:
     def __init__(self):
         """初始化变量"""
+        self.websocket = None
         self.sendmessage = None  # 发送给服务器的消息
         self.client_Id = "gxoVp0ey_oU8skDD"  # 机器人id
         self.client_Secret = "ZFrLRGLbQmLsszwq"  # 机器人id
@@ -22,7 +23,7 @@ class KookBot:
         self.baseUrl = "https://www.kookapp.cn"
         self.sessions = requests.Session()  # 持续化session
         self.sessions.headers.update(self.headers)  # 给sessions上header
-
+        self.gateway = None
         self.api = {
             "stream": "/api/v3/asset/create",
             "gateway": "/api/v3/gateway/index",
@@ -130,25 +131,58 @@ class KookBot:
         except Exception as e:
             print(e)
 
-    async def dealerror(self, sleepTime): # 处理失败函数
-        sleepTime += pow(2, self.slotTimes - 1)
-        if sleepTime <= 60:
-            self.slotTimes += 1
+    async def dealerror(self): # 处理失败函数
+        sleepTime = pow(2, self.slotTimes)
         # sleepTime = pow(2, self.slotTimes)
-        await asyncio.sleep(pow(2, self.slotTimes - 1))
+        await asyncio.sleep(sleepTime)
 
     async def connection(self):
         while True:
-            if self.now_status == "init":
-                url = self.getgateway()
+            if self.now_status == "has_connected":  # 持续的时间最长，为了减少判断写在第一句
+                pass # 30秒计时器 6秒内收到消息
+            elif self.now_status == "init":
+                self.gateway = self.getgateway()
                 if url == -1:
                     await self.dealerror()  # 处理失败函数  如果self.getgateway()函数返回try执行的错误代码-1，如果sleeptime<60，倒退指数+1，（最大为60），然后继续获取gateway
-                    continue
+                    if self.slotTimes < 6:
+                        self.slotTimes += 1
                 else:
                     self.slotTimes = 0
                     self.now_status = "has_get_gateway"
-                    continue
             elif self.now_status == "has_get_gateway":
+                self.websocket = await self.connectGateway(self.gateway)
+                if self.websocket:
+                    self.slotTimes = 0
+                    self.now_status = "has_established_to_gateway"
+                else:
+                    await self.dealerror()
+                    self.slotTimes += 1
+                    if self.slotTimes >= 2:
+                        self.now_status = "init"
+                        self.slotTimes = 0
+            elif self.now_status == "has_established_to_gateway":
+                self.looplist.append(self.loop.create_task(self.countdowntime(6)))
+                self.looplist.append(self.loop.create_task(self.waitmessage(self.websocket)))
+                response = await asyncio.gather(self.looplist[0], self.looplist[1])
+                if not response[0] and not response[1]:
+                    self.status = "time_out"
+                    pass                         # 写重连函数，先留空，给嗷呜留着
+                else:
+                    self.status = "has_connected"
+            else: # timeout,重试两次ping,分别间隔2-4秒，如果6秒内收到ping，则返回has_connected
+                self.sendmessage = {
+                    "s": 2,
+                    "sn": 0
+                }
+                self.websocket.send(json.dumps(self.sendmessage))
+                if await self.waitmessage(self.websocket):
+                    self.status = "has_connected"
+                else:
+                    await self.dealerror()
+                    self.slotTimes += 1
+                    if self.slotTimes == 2:
+                        self.status = "has_get_gateway"
+                        self.slotTimes = 0
             firstlogin = False
             url = self.getgateway()
             if url == -1:
