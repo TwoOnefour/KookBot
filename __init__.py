@@ -5,6 +5,7 @@ import json
 import zlib
 import websockets
 import asyncio
+import queue
 # import urllib
 
 class KookBot:
@@ -31,7 +32,8 @@ class KookBot:
         self.flag = False
         self.loop = asyncio.get_event_loop()
         self.looplist = []
-
+        self.messageQueue = queue.Queue()
+        self.slotTimes = 0
         # self.websocket = websockets.WEb
 
     def getgateway(self):  # compress 	query 	integer 	false # zlib.decompress(compressed_data).decode()
@@ -50,6 +52,7 @@ class KookBot:
         if not self.message:
             print("Connection failed. Retry in 3 seconds")
             time.sleep(3)
+            self.flag = True
             return False
         # self.sendmessage["sn"] = self.message["sn"]
         # print(self.message)
@@ -80,7 +83,7 @@ class KookBot:
                         self.looplist.append(self.loop.create_task(self.waitmessage(websocket)))
                         response = await asyncio.gather(self.looplist[0], self.looplist[1])
                         if not response[0] and not response[1]:
-                            break # 写重连函数，先留空
+                            break  # 写重连函数，先留空
                         # self.dealmessage(self.sendmessage)
                         if self.message["d"]["code"] == 0:
                             print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
@@ -104,8 +107,8 @@ class KookBot:
                     if not response[1]:
                         # print()
                         break
-                    
-    async def countdowntime(self, time): # 超时计时器
+
+    async def countdowntime(self, time):  # 超时计时器
         nowtime = 0
         while not self.flag:
             # if not self.flag:
