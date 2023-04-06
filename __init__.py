@@ -36,13 +36,42 @@ class KookBot:
         self.messageQueue = queue.Queue()  # 消息队列
         self.slotTimes = 0  # 倒退指数
         # self.websocket = websockets.WEb
+        self.now_status = None
         self.status = {
             "init":{
                 "start":0,
                 "max":60,
                 "slotTimes":0
             },
+            "has_get_gateway":{
+                "start":0,
+                "max":4,
+                "slotTimes": 0
+            },
+            "has_established_to_gateway":{
+                "start":0,
+                "max":0,
+                "slotTimes": 0
+            },
+            "has_connected":{
+                "start":0,
+                "max":0,
+                "slotTimes": 0
+            },
+            "time_out":{
+                "start":0,
+                "max":4,
+                "slotTimes":0
+            }
         }
+        self.status_map = {
+            "init":["has_get_gateway"],
+            "has_get_gateway":["init", "has_established_to_gateway"],
+            "has_established_to_gateway":["has_get_gateway", "has_connected","init"],
+            "has_connected":["time_out", "init"],
+            "time_out":["has_get_gateway", "has_connected","init"]
+        }
+
 
     def getgateway(self):  # compress 	query 	integer 	false # zlib.decompress(compressed_data).decode()
         self.targetUrl = "{}{}".format(self.baseUrl, self.api["gateway"])
@@ -101,8 +130,8 @@ class KookBot:
         except Exception as e:
             print(e)
 
-    async def dealerror(self): # 处理失败函数
-        sleepTime = pow(2, self.slotTimes)
+    async def dealerror(self, sleepTime): # 处理失败函数
+        sleepTime += pow(2, self.slotTimes - 1)
         if sleepTime <= 60:
             self.slotTimes += 1
         # sleepTime = pow(2, self.slotTimes)
@@ -110,6 +139,16 @@ class KookBot:
 
     async def connection(self):
         while True:
+            if self.now_status == "init":
+                url = self.getgateway()
+                if url == -1:
+                    await self.dealerror()  # 处理失败函数  如果self.getgateway()函数返回try执行的错误代码-1，如果sleeptime<60，倒退指数+1，（最大为60），然后继续获取gateway
+                    continue
+                else:
+                    self.slotTimes = 0
+                    self.now_status = "has_get_gateway"
+                    continue
+            elif self.now_status == "has_get_gateway":
             firstlogin = False
             url = self.getgateway()
             if url == -1:
