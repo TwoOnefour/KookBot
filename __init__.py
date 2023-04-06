@@ -104,7 +104,7 @@ class KookBot:
                     if not response[1]:
                         # print()
                         break
-
+                    
     async def countdowntime(self, time): # 超时计时器
         nowtime = 0
         while not self.flag:

@@ -1,7 +1,9 @@
 import asyncio
 import websockets
+import json
 
-IP_ADDR = "127.0.0.1"
+
+IP_ADDR = "0.0.0.0"
 IP_PORT = "8888"
 
 
@@ -12,7 +14,13 @@ async def serverHands(websocket):
         print("recv_text=" + recv_text)
         if recv_text == "hello":
             print("connected success")
-            await websocket.send("123")
+            await websocket.send(json.dumps({
+                "s": 5,
+                "d": {
+                    "code": 41008,
+                    "err": "Missing params"
+                }
+            }))
             return True
         else:
             await websocket.send("connected fail")
@@ -21,9 +29,10 @@ async def serverHands(websocket):
 # 接收从客户端发来的消息并处理，再返给客户端ok
 async def serverRecv(websocket):
     while True:
-        recv_text = await websocket.recv()
-        print("recv:", recv_text)
-        await websocket.send("ok!!!")
+        # recv_text = await websocket.recv()
+        # print("recv:", recv_text)
+        # await websocket.send("ok!!!")
+        pass
 
 
 # 握手并且接收数据
