@@ -81,15 +81,13 @@ class KookBot:
         # result = self.postmessage("GET")
         # token = result["data"][]
         # dict.get()
-        result = self.postmessage("GET")
+        try:
+            result = self.postmessage("GET")
+        except requests.exceptions.ConnectionError:
+            return -1
         if result != -1:
-            try:
-                return self.postmessage("GET")["data"]["url"]
-            except requests.exceptions.ConnectionError:
-                return -1
-        else:
-            if not self.dealerror(url): # 处理失败函数
-                continue
+            return result["data"]["url"]
+        return result
 
     async def waitmessage(self, websocket):
         # await asyncio.sleep(6)
@@ -97,6 +95,8 @@ class KookBot:
         # time.sleep(6)
         # self.getmessage(websocket)
         if not self.message:
+            self.message = json.loads(self.message)
+        if not self.message.get("s"):
             print("Connection failed. Retry in 3 seconds")
             time.sleep(3)
             self.flag = True
@@ -142,7 +142,7 @@ class KookBot:
                 pass # 30秒计时器 6秒内收到消息
             elif self.now_status == "init":
                 self.gateway = self.getgateway()
-                if url == -1:
+                if self.gateway == -1:
                     await self.dealerror()  # 处理失败函数  如果self.getgateway()函数返回try执行的错误代码-1，如果sleeptime<60，倒退指数+1，（最大为60），然后继续获取gateway
                     if self.slotTimes < 6:
                         self.slotTimes += 1
@@ -166,9 +166,10 @@ class KookBot:
                 response = await asyncio.gather(self.looplist[0], self.looplist[1])
                 if not response[0] and not response[1]:
                     self.status = "time_out"
-                    pass                         # 写重连函数，先留空，给嗷呜留着
+                    pass                         # 写重连函数，先留空，给嗷呜留着❤
                 else:
                     self.status = "has_connected"
+
             else: # timeout,重试两次ping,分别间隔2-4秒，如果6秒内收到ping，则返回has_connected
                 self.sendmessage = {
                     "s": 2,
@@ -177,52 +178,53 @@ class KookBot:
                 self.websocket.send(json.dumps(self.sendmessage))
                 if await self.waitmessage(self.websocket):
                     self.status = "has_connected"
+                    self.slotTimes = 0
                 else:
                     await self.dealerror()
                     self.slotTimes += 1
                     if self.slotTimes == 2:
                         self.status = "has_get_gateway"
                         self.slotTimes = 0
-            firstlogin = False
-            url = self.getgateway()
-            if url == -1:
-                await self.dealerror() # 处理失败函数  如果self.getgateway()函数返回try执行的错误代码-1，如果sleeptime<60，倒退指数+1，（最大为60），然后继续获取gateway
-                continue
-            else:
-                self.slotTimes = 0
-
-            websocket = await self.connectGateway(url) # 链接gateway
-            while True:
-                # self.getmessage(websocket)
-                if not firstlogin:
-                    self.looplist.append(self.loop.create_task(self.countdowntime(6)))
-                    self.looplist.append(self.loop.create_task(self.waitmessage(websocket)))
-                    response = await asyncio.gather(self.looplist[0], self.looplist[1])
-                    if not response[0] and not response[1]:
-                        break  # 写重连函数，先留空
-                    # self.dealmessage(self.sendmessage)
-                    if self.message["d"]["code"] == 0:
-                        print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
-                        firstlogin = True
-                        # 登录以后写一个异步函数专门接受信息
-                self.looplist.clear()
-                self.flag = False
-                self.sendmessage = {
-                    "s": 2,
-                    "sn": 0
-                }
-                await asyncio.sleep(30)
-                self.dealmessage(self.sendmessage)
-                # self.looplist.append(self.loop.create_task(self.countdowntime(25)))
-                self.looplist.append(self.loop.create_task(websocket.send(json.dumps(self.sendmessage))))
-                self.looplist.append(self.loop.create_task(self.waitmessage(websocket)))
-                response = await asyncio.gather(self.looplist[0], self.looplist[1])
-                # ping
-                # self.dealmessage(self.sendmessage)
-                # await websocket.send(json.dumps(self.sendmessage))
-                if not response[1]:
-                    # print()
-                    break
+            # firstlogin = False
+            # url = self.getgateway()
+            # if url == -1:
+            #     await self.dealerror() # 处理失败函数  如果self.getgateway()函数返回try执行的错误代码-1，如果sleeptime<60，倒退指数+1，（最大为60），然后继续获取gateway
+            #     continue
+            # else:
+            #     self.slotTimes = 0
+            #
+            # websocket = await self.connectGateway(url) # 链接gateway
+            # while True:
+            #     # self.getmessage(websocket)
+            #     if not firstlogin:
+            #         self.looplist.append(self.loop.create_task(self.countdowntime(6)))
+            #         self.looplist.append(self.loop.create_task(self.waitmessage(websocket)))
+            #         response = await asyncio.gather(self.looplist[0], self.looplist[1])
+            #         if not response[0] and not response[1]:
+            #             break  # 写重连函数，先留空
+            #         # self.dealmessage(self.sendmessage)
+            #         if self.message["d"]["code"] == 0:
+            #             print("{}   Connection established. Hello, KOOK！".format(str(datetime.datetime.now())[0:-7]))
+            #             firstlogin = True
+            #             # 登录以后写一个异步函数专门接受信息
+            #     self.looplist.clear()
+            #     self.flag = False
+            #     self.sendmessage = {
+            #         "s": 2,
+            #         "sn": 0
+            #     }
+            #     await asyncio.sleep(30)
+            #     self.dealmessage(self.sendmessage)
+            #     # self.looplist.append(self.loop.create_task(self.countdowntime(25)))
+            #     self.looplist.append(self.loop.create_task(websocket.send(json.dumps(self.sendmessage))))
+            #     self.looplist.append(self.loop.create_task(self.waitmessage(websocket)))
+            #     response = await asyncio.gather(self.looplist[0], self.looplist[1])
+            #     # ping
+            #     # self.dealmessage(self.sendmessage)
+            #     # await websocket.send(json.dumps(self.sendmessage))
+            #     if not response[1]:
+            #         # print()
+            #         break
 
 
     async def countdowntime(self, time):  # 超时计时器
