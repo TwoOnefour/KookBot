@@ -160,6 +160,14 @@ class KookBot:
                         self.gpt_user.pop(message["d"]["author_id"])
                         continue
                     else:
+                        if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
+                            self.json = {
+                                "target_id": self.gpt_user[name][3],
+                                "content": "目前最大上下文限制为10句话，已经自动退出gpt聊天",
+                                "quote": self.gpt_user[name][2]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
                         self.gpt_user[message["d"]["author_id"]][2] = message["d"]["msg_id"]
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
                 elif "gpt" in message["d"]["content"]:  # 对每一个调用的人创建一个异步函数,传入使用者的姓名
