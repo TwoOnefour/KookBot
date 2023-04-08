@@ -47,9 +47,11 @@ async def client_reconnect(websocket):
 # 进行websocket连接
 async def clientRun():
     ipaddress = IP_ADDR + ":" + IP_PORT
-    async with websockets.connect("ws://" + ipaddress) as websocket:
-        await clientHands(websocket)
-        await client_reconnect(websocket)
+    websocket1 = None
+    websocket1 = await websockets.connect("ws://" + ipaddress)
+        # websocket1 = websocket
+    await clientHands(websocket1)
+    await client_reconnect(websocket1)
 
 # main function
 if __name__ == '__main__':
