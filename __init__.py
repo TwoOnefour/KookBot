@@ -162,9 +162,9 @@ class KookBot:
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
-                                "target_id": self.gpt_user[name][3],
+                                "target_id": self.gpt_user[message["d"]["author_id"]][3],
                                 "content": "目前最大上下文限制为10句话，已经自动退出gpt聊天",
-                                "quote": self.gpt_user[name][2]
+                                "quote": self.gpt_user[message["d"]["author_id"]][2]
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
