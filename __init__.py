@@ -168,6 +168,7 @@ class KookBot:
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
+                            continue
                         self.gpt_user[message["d"]["author_id"]][2] = message["d"]["msg_id"]
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
                 elif "gpt" in message["d"]["content"]:  # 对每一个调用的人创建一个异步函数,传入使用者的姓名
