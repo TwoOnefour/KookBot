@@ -20,9 +20,9 @@ class KookBot:
         self.recv_message = False  #  是否连接后第一次启动after_connecting()方法
         self.websocket = None  # websocket对象
         self.send_message = {}  # 发送给服务器的消息
-        self.client_Id = "gxoVp0ey_oU8skDD"  # 机器人id
-        self.client_Secret = "ZFrLRGLbQmLsszwq"  # 机器人id
-        self.token = "1/MTY1MTg=/L8iqnm2sB07wZDsajv9R4g=="  # 机器人id
+        self.client_Id = ""  # 机器人id
+        self.client_Secret = ""  # 机器人id
+        self.token = ""  # 机器人id
         self.headers = {
             "Authorization": "Bot {}".format(self.token), # 请求头拼接token
             "Content-type": "application/json",
