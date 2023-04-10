@@ -128,23 +128,27 @@ class KookBot:
 
     async def receiving_message(self, websocket):
         while self.now_status != "init" and self.recv_message:
-            message = await self.getmessage(websocket)
-            # self.dealmessage(message)
-            if message["s"] == 3:
-                self.pong = True
-                self.flag = True
-            elif message["s"] == 1:
-                self.hello = True
-                self.flag = True
-            elif message["s"] == 0:
-                if self.sn >= message["sn"]:  # 在接受到已经处理过的消息的时候选择不处理
-                    continue
-                self.sn += 1
-                self.messageQueue.put(message)
-            elif message["s"] == 5:
-                pass                        # 写重连函数，先留空，给嗷呜留着❤
-            else:  # s == 6, resume ok
-                self.resume_OK = True                        # 应该不用处理
+            try:
+                message = await self.getmessage(websocket)
+                # self.dealmessage(message)
+                if message["s"] == 3:
+                    self.pong = True
+                    self.flag = True
+                elif message["s"] == 1:
+                    self.hello = True
+                    self.flag = True
+                elif message["s"] == 0:
+                    if self.sn >= message["sn"]:  # 在接受到已经处理过的消息的时候选择不处理
+                        continue
+                    self.sn += 1
+                    self.messageQueue.put(message)
+                elif message["s"] == 5:
+                    pass                        # 写重连函数，先留空，给嗷呜留着❤
+                else:  # s == 6, resume ok
+                    self.resume_OK = True                        # 应该不用处理
+            except Exception as e:
+                print(e)
+                self.now_status = "time_out"
 
     async def deal_message_function(self):  # 处理s==0消息的函数
         while self.message_handler_is_running:
@@ -156,31 +160,40 @@ class KookBot:
                     continue
                 if self.gpt_user.get(message["d"]["author_id"]):
                     if message["d"]["content"].strip("") == "q":
+                        self.json = {
+                            "target_id": message["d"]["target_id"],
+                            "content": "已退出gpt聊天",
+                            "quote": message["d"]["msg_id"]
+                        }
+                        self.targetUrl = self.baseUrl + self.api["send_message"]
+                        self.postmessage("POST")
                         self.gpt_user[message["d"]["author_id"]][1].cancel()
                         self.gpt_user.pop(message["d"]["author_id"])
                         continue
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
-                                "target_id": self.gpt_user[message["d"]["author_id"]][3],
+                                "target_id": message["d"]["target_id"],
                                 "content": "目前最大上下文限制为10句话，已经自动退出gpt聊天",
-                                "quote": self.gpt_user[message["d"]["author_id"]][2]
+                                "quote": message["d"]["msg_id"]
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
+                            self.gpt_user[message["d"]["author_id"]][1].cancel()
+                            self.gpt_user.pop(message["d"]["author_id"])
                             continue
                         self.gpt_user[message["d"]["author_id"]][2] = message["d"]["msg_id"]
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
                 elif "gpt" in message["d"]["content"]:  # 对每一个调用的人创建一个异步函数,传入使用者的姓名
                     # asyncio.get_event_loop().create_task(self.running_gpt(message["d"]["author_id"]))
-                    self.gpt_user[message["d"]["author_id"]] = [[{"role": "assistant", "content": "你好，我是gpt-3，我能为你做些什么"}], asyncio.get_event_loop().create_task(self.running_gpt(message["d"]["author_id"])), message["d"]["msg_id"], message["d"]["target_id"]]
+                    self.gpt_user[message["d"]["author_id"]] = [[], asyncio.get_event_loop().create_task(self.running_gpt(message["d"]["author_id"])), message["d"]["msg_id"], message["d"]["target_id"]]
 
 
     async def running_gpt(self, name):
-        now = 1
+        now = 0
         self.json = {
             "target_id": self.gpt_user[name][3],
-            "content": "你好，我是gpt-3，我能为你做些什么",
+            "content": "你好，我是gpt-3，我能为你做些什么（输入q退出gpt对话）",
             "quote": self.gpt_user[name][2]
         }
         self.targetUrl = self.baseUrl + self.api["send_message"]
