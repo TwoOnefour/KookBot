@@ -247,19 +247,20 @@ class KookBot:
                     self.now_status = "has_get_gateway"
             elif self.now_status == "has_get_gateway":
                 if self.resume:  # 是否从time_out返回
-                    await self.websocket.send({
-                        "s": 2,
-                        "sn": self.sn
-                    })
-                    # result1 = await self.getmessage(self.websocket)
-                    self.dealmessage({
-                        "s": 2,
-                        "sn": self.sn
-                    })
-                    # self.looplist.append(asyncio.get_event_loop().create_task(self.countdowntime(6)))  # 6秒内收到消息
-                    response = await asyncio.gather(asyncio.get_event_loop().create_task(self.countdowntime(6)))  # 6秒内收到消息
-                    # self.looplist.clear()
                     try:
+                        response = asyncio.gather(asyncio.get_event_loop().create_task(self.countdowntime(6)))
+                        await self.websocket.send({
+                            "s": 2,
+                            "sn": self.sn
+                        })
+                    # result1 = await self.getmessage(self.websocket)
+                        self.dealmessage({
+                            "s": 2,
+                            "sn": self.sn
+                        })
+                    # self.looplist.append(asyncio.get_event_loop().create_task(self.countdowntime(6)))  # 6秒内收到消息
+                    # response = asyncio.gather(asyncio.get_event_loop().create_task(self.countdowntime(6)))  # 6秒内收到消息
+                    # self.looplist.clear()
                         if not response[0] or not self.resume_OK:
                             self.slotTimes += 1
                             await asyncio.sleep(self.slotTimes * 8)
