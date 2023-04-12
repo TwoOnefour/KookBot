@@ -140,6 +140,7 @@ class KookBot:
                     self.resume_OK = True                        # 应该不用处理
             except Exception as e:
                 print(e)
+                await asyncio.sleep(10)   # 等待重连
                 self.now_status = "time_out"
 
     async def deal_message_function(self):  # 处理s==0消息的函数
@@ -148,7 +149,7 @@ class KookBot:
                 await asyncio.sleep(1)
             else:
                 message = self.messageQueue.get()
-                if message["d"]["author_id"] == '369581918':
+                if message["d"]["author_id"] == '369581918':  # 如果接受到机器人消息就跳过
                     continue
                 if self.gpt_user.get(message["d"]["author_id"]):
                     if message["d"]["content"].strip("") == "q":
@@ -170,17 +171,28 @@ class KookBot:
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
                         self.postmessage("POST")
-                        self.gpt_user.pop(message["d"]["author_id"])
+                        # self.gpt_user.pop(message["d"]["author_id"])
                     elif message["d"]["content"].strip("") == "u":
-                        self.json = {
-                            "target_id": message["d"]["target_id"],
-                            "content": "上下文模式开启",
-                            "quote": message["d"]["msg_id"]
-                        }
-                        self.targetUrl = self.baseUrl + self.api["send_message"]
-                        self.postmessage("POST")
-                        self.gpt_user.pop(message["d"]["author_id"])
-                        self.gpt_user[message["d"]["author_id"]][4] = True
+                        if not self.gpt_user[message["d"]["author_id"]][4]:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "上下文模式开启",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                            # self.gpt_user.pop(message["d"]["author_id"])
+                            self.gpt_user[message["d"]["author_id"]][4] = True
+                        else:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "上下文模式关闭",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                            self.gpt_user[message["d"]["author_id"]][4] = False
+                            # self.gpt_user.pop(message["d"]["author_id"])
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
@@ -234,7 +246,10 @@ class KookBot:
             else:
                 user_time = 0  # 收到消息重置计数
                 try:
-                    result = await gptapi.send_to_chatGPT(self.gpt_user[name][0])
+                    if not self.gpt_user[name][4]:
+                        result = await gptapi.send_to_chatGPT([self.gpt_user[name][0][-1]])  # 如果不是上下文模式，则只发送一条
+                    else:
+                        result = await gptapi.send_to_chatGPT(self.gpt_user[name][0])
                     self.json = {
                         "target_id": self.gpt_user[name][3],
                         "content": result,
@@ -244,8 +259,7 @@ class KookBot:
                     while self.now_status != "has_connected":
                         await asyncio.sleep(1)
                     self.postmessage("POST")
-                    if self.gpt_user[name][4]:
-                        self.gpt_user[name][0].append({"role": "assistant", "content": result})
+                    self.gpt_user[name][0].append({"role": "assistant", "content": result})
                     now += 2
                 except Exception as e:
                     print(e)
