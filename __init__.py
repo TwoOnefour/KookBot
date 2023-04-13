@@ -18,8 +18,8 @@ class KookBot:
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
-        self.token = ""  # 机器人id
-        openai.api_key = ""
+        self.token = "1/MTY1MTg=/yOn0026C4i4b8zci7X99dQ=="  # 机器人id
+        openai.api_key = "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"
         self.gpt_user = {}  # gpt当前使用用户
         self.resume_OK = False # 是否resume成功
         self.sn = 0  # sn消息数量
@@ -159,7 +159,8 @@ class KookBot:
                 await asyncio.sleep(1)
             else:
                 message = self.messageQueue.get()
-                if message["d"]["author_id"] == self.author_id or message["d"]["extra"]["mention_all"]:  # 如果接受到机器人消息或者艾特全员直接跳过
+
+                if message["d"]["type"] == 255 or message["d"]["author_id"] == self.author_id or message["d"]["extra"].get("mention_all"):  # 如果接受到机器人消息或者艾特全员直接跳过
                     continue
                 if message["d"]["extra"]["mention"]:
                     # new_message = message["d"]["content"].strip(r"(met)3270025514(met)")
