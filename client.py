@@ -55,5 +55,7 @@ async def clientRun():
 
 # main function
 if __name__ == '__main__':
-    print("======client main begin======")
-    asyncio.get_event_loop().run_until_complete(clientRun())
+    message = []
+    if not message:
+        print(1)
+    print(1)
