@@ -169,7 +169,11 @@ class KookBot:
                     elif message["d"]["content"].strip("") == "h":
                         self.json = {
                             "target_id": message["d"]["target_id"],
-                            "content": "q\t退出gpt模式\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助",
+                            "content": "q\t退出gpt模式\n"
+                                       "h\t返回此帮助\n"
+                                       "u\t开启上下文模式\n"
+                                       "e\t上下文调教模式\n"
+                                       "eh\t上下文调教模式帮助",
                             "quote": message["d"]["msg_id"]
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
@@ -281,26 +285,11 @@ class KookBot:
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
 
-                        # if message["d"]["content"].strip("")[1] == ":" or message["d"]["content"].strip("")[1] == "：":
-                        #     try:
-                        #         split_message = message["d"]["content"].strip("").split("\n")
-                        #         for i in split_message:
-                        #             if i.strip("")[0] == "Q":   # 如果是question，则拼接json为{"role": "user", "content": some_question}，下面同理
-                        #                 self.gpt_user[message["d"]["author_id"]][5][1].append({"role": "user", "content": i.strip("")[2:]})
-                        #             elif i.strip("")[0] == "A":
-                        #                 self.gpt_user[message["d"]["author_id"]][5][1].append(
-                        #                     {"role": "assistant", "content": i.strip("")[2:]})
-                        #             else:
-                        #                 continue
-                        #             self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
-                        #     except Exception as e:
-                        #         pass
-
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
                                 "target_id": message["d"]["target_id"],
-                                "content": "目前最大上下文限制为10句话，已经自动退出gpt聊天",
+                                "content": "目前限制为10句话，已经自动退出gpt聊天",
                                 "quote": message["d"]["msg_id"]
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
