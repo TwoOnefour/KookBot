@@ -164,13 +164,10 @@ class KookBot:
                     continue
                 if message["d"]["extra"]["mention"]:
                     # new_message = message["d"]["content"].strip(r"(met)3270025514(met)")
-                    new_message = re.findall(re.compile(r"(.*)\(met\){}\(met\)([\D\w]*)".format(self.author_id), re.M), message["d"]["content"])  # 写上艾特逻辑，并且处理content
-                    if new_message[0][0].strip(" ") != "":  # 如果有消息，直接启动
-                        message["d"]["content"] = new_message[0][0]
-
-                    elif new_message[0][1].strip(" ") != "":  # 如果有消息
-                        message["d"]["content"] = new_message[0][1]
-
+                    # new_message = re.findall(re.compile(r"(.*)\(met\){}\(met\)([\D\w]*)".format(self.author_id), re.M), message["d"]["content"])  # 写上艾特逻辑，并且处理content
+                    new_message = message["d"]["content"].replace("(met)", "").replace("369581918", "")
+                    if new_message.strip(" ") != "":  # 如果有消息，直接启动
+                        message["d"]["content"] = new_message.strip(" ")
                     else:  # 如果只艾特没消息，直接post消息并continue循环
                         self.json = {
                             "target_id": message["d"]["target_id"],
@@ -188,6 +185,7 @@ class KookBot:
                         while self.now_status != "has_connected":  # 添加等待函数，等待重连
                             await asyncio.sleep(1)
                         self.postmessage("POST")
+                        continue
                     # 这里艾特过程初始化启动，改了一下
                     if not self.gpt_user.get(message["d"]["author_id"]):
                         self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], 0]
