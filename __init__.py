@@ -311,6 +311,7 @@ class KookBot:
                     # [4]是是否开启上下文模式
                     # [5]调教模式 结构为[boolean, [json_message]]
                     # [6]当前协程已经处理的消息数量
+
     async def running_gpt(self, name):
         now = 0
         user_time = 0  # 用于计数用户多久没有发送消息
