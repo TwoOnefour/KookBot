@@ -163,6 +163,18 @@ class KookBot:
                 if message["d"]["type"] == 255 or message["d"]["author_id"] == self.author_id or message["d"]["extra"].get("mention_all"):  # 如果接受到机器人消息或者艾特全员直接跳过
                     continue
                 if message["d"]["extra"]["mention"]:
+                    if self.gpt_user.get(message["d"]["author_id"]):
+                        if self.gpt_user.get(message["d"]["author_id"])[6]:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "请不要催，正在等待结果返回",
+                                "quote": message["d"]["msg_id"]  # 取最后一条
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            while self.now_status != "has_connected":  # 添加等待函数，等待重连
+                                await asyncio.sleep(1)
+                            self.postmessage("POST")
+                            continue
                     # new_message = message["d"]["content"].strip(r"(met)3270025514(met)")
                     # new_message = re.findall(re.compile(r"(.*)\(met\){}\(met\)([\D\w]*)".format(self.author_id), re.M), message["d"]["content"])  # 写上艾特逻辑，并且处理content
                     new_message = message["d"]["content"].replace("(met)", "").replace("369581918", "")
@@ -188,7 +200,7 @@ class KookBot:
                         continue
                     # 这里艾特过程初始化启动，改了一下
                     if not self.gpt_user.get(message["d"]["author_id"]):
-                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], 0]
+                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], False]
 
                 else:
                     continue
@@ -363,7 +375,7 @@ class KookBot:
                     # [3]是消息频道，用于返回gpt消息时回复该消息所在频道
                     # [4]是是否开启上下文模式
                     # [5]调教模式 结构为[boolean, [json_message]]
-                    # [6]当前协程已经处理的消息数量
+                    # [6]是否正在运行
 
     async def running_gpt(self, name):
         now = 0
@@ -387,6 +399,7 @@ class KookBot:
                 user_time = 0  # 收到消息重置计数
                 now = len(self.gpt_user[name][0]) + 1  # 记录此时的消息数，如果在运行时有消息传进来，那么也会使得下一轮循环的now不等于self.gpt_user[name][0]消息队列中的消息数量
                 try:
+                    self.gpt_user[name][6] = True  # 判断当前运行状态
                     if not self.gpt_user[name][4]:  # 如果不是上下文
                         if not self.gpt_user[name][5][0]:  # 如果不是调教
                             result = await gptapi.send_to_chatGPT([self.gpt_user[name][0][-1]])  # 如果不是上下文模式或者调教模式，则只发送一条，由于是一条，所以必须要加[]
@@ -410,6 +423,7 @@ class KookBot:
                             "content": result,
                             "quote": self.gpt_user[name][2][-1]  # 否则返回最后一条消息
                         }
+                    self.gpt_user[name][6] = False
                     self.targetUrl = self.baseUrl + self.api["send_message"]
                     while self.now_status != "has_connected":
                         await asyncio.sleep(1)
