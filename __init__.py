@@ -16,8 +16,8 @@ class KookBot:
         """初始化变量"""
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
-        self.token = "1/MTY1MTg=/L8iqnm2sB07wZDsajv9R4g=="  # 机器人id
-        openai.api_key = "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"
+        self.token = ""  # 机器人id
+        openai.api_key = ""
         self.gpt_user = {}  # gpt当前使用用户
         self.resume_OK = False # 是否resume成功
         self.sn = 0  # sn消息数量
