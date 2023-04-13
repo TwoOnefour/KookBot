@@ -162,7 +162,7 @@ class KookBot:
 
                 if message["d"]["type"] == 255 or message["d"]["author_id"] == self.author_id or message["d"]["extra"].get("mention_all"):  # 如果接受到机器人消息或者艾特全员直接跳过
                     continue
-                if message["d"]["extra"]["mention"]:
+                if message["d"]["extra"]["mention"] == ["{}".format(self.author_id)]:
                     if self.gpt_user.get(message["d"]["author_id"]):
                         if self.gpt_user.get(message["d"]["author_id"])[6]:
                             self.json = {
@@ -177,7 +177,7 @@ class KookBot:
                             continue
                     # new_message = message["d"]["content"].strip(r"(met)3270025514(met)")
                     # new_message = re.findall(re.compile(r"(.*)\(met\){}\(met\)([\D\w]*)".format(self.author_id), re.M), message["d"]["content"])  # 写上艾特逻辑，并且处理content
-                    new_message = message["d"]["content"].replace("(met)", "").replace("369581918", "")
+                    new_message = message["d"]["content"].replace("(met)", "").replace("{}".format(self.author_id), "")
                     if new_message.strip(" ") != "":  # 如果有消息，直接启动
                         message["d"]["content"] = new_message.strip(" ")
                     else:  # 如果只艾特没消息，直接post消息并continue循环
@@ -340,7 +340,12 @@ class KookBot:
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
                             self.gpt_user[message["d"]["author_id"]][0] = self.gpt_user[message["d"]["author_id"]][5][1]
-
+                    elif not self.gpt_user[message["d"]["author_id"]][1]:
+                        self.gpt_user[message["d"]["author_id"]][0].append(
+                            {"role": "user", "content": message["d"]["content"].strip(" ")})
+                        self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
+                        self.gpt_user[message["d"]["author_id"]][1] = asyncio.get_event_loop().create_task(
+                            self.running_gpt(message["d"]["author_id"]))  # 启动
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
@@ -355,12 +360,7 @@ class KookBot:
                             continue
                         self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
-                    if not self.gpt_user[message["d"]["author_id"]][1]:
-                        # self.gpt_user[message["d"]["author_id"]][0].append(
-                        #     {"role": "user", "content": message["d"]["content"].strip(" ")})
-                        self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
-                        self.gpt_user[message["d"]["author_id"]][1] = asyncio.get_event_loop().create_task(
-                            self.running_gpt(message["d"]["author_id"]))  # 启动
+
 
                 # elif "gpt" in message["d"]["content"]:  # 对每一个调用的人创建一个异步函数,传入使用者的姓名
                 # else:
