@@ -174,7 +174,14 @@ class KookBot:
                     else:  # 如果只艾特没消息，直接post消息并continue循环
                         self.json = {
                             "target_id": message["d"]["target_id"],
-                            "content": "你好，我是gpt-3，我能为你做些什么（输入h返回说明）",
+                            "content": "基本用法：\n"
+                                       "@机器人 + {some_message_to_send} \n"
+                                       "如果没带任何参数就会返回本消息\n"
+                                       "q\t退出gpt模式\n"
+                                       "h\t返回此帮助\n"
+                                       "u\t开启上下文模式\n"
+                                       "e\t上下文调教模式\n"
+                                       "eh\t上下文调教模式帮助",
                             "quote": message["d"]["msg_id"]  # 取最后一条
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
@@ -202,7 +209,10 @@ class KookBot:
                     elif message["d"]["content"].strip(" ") == "h":
                         self.json = {
                             "target_id": message["d"]["target_id"],
-                            "content": "q\t退出gpt模式\n"
+                            "content": "基本用法：\n"
+                                       "@机器人 + {some_message_to_send} \n"
+                                       "如果没带任何参数就会返回本消息\n"
+                                       "q\t退出gpt模式\n"
                                        "h\t返回此帮助\n"
                                        "u\t开启上下文模式\n"
                                        "e\t上下文调教模式\n"
