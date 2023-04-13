@@ -18,8 +18,8 @@ class KookBot:
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
-        self.token = "1/MTY1MTg=/yOn0026C4i4b8zci7X99dQ=="  # 机器人id
-        openai.api_key = "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"
+        self.token = ""  # 机器人id
+        openai.api_key = ""
         self.gpt_user = {}  # gpt当前使用用户
         self.resume_OK = False # 是否resume成功
         self.sn = 0  # sn消息数量
