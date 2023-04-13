@@ -16,8 +16,8 @@ class KookBot:
         """初始化变量"""
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
-        self.token = ""  # 机器人id
-        openai.api_key = ""
+        self.token = "1/MTY1MTg=/L8iqnm2sB07wZDsajv9R4g=="  # 机器人id
+        openai.api_key = "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"
         self.gpt_user = {}  # gpt当前使用用户
         self.resume_OK = False # 是否resume成功
         self.sn = 0  # sn消息数量
@@ -237,7 +237,8 @@ class KookBot:
                                        "同时以类型Q:结尾\n"
                                        "输入纯空格同样视为错误输入，不会记入消息列表，最后，请输入e作为结束标志，会将你的问题和上下文"
                                        "一并发送到gpt获取结果\n"
-                                       "在发送以后，调校功能会关闭，恢复到单句对话模式",
+                                       "在发送以后，调校功能会关闭，恢复到单句对话模式"
+                                       "ps:最好一行一个问题，不要分行",
                             "quote": message["d"]["msg_id"]
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
@@ -247,7 +248,7 @@ class KookBot:
                             continue
                         # re.compile("[QA][:：](.*)\n]")
                         split_message = re.findall(re.compile("[QA][:：](.*)"), message["d"]["content"])  # 正则匹配
-                        split_message_type = re.findall(re.compile("[QA]"), message["d"]["content"])  # 正则匹配每一行的QA类型
+                        split_message_type = re.findall(re.compile("([QA])[:：]"), message["d"]["content"])  # 正则匹配每一行的QA类型
                         lines = re.findall(re.compile(r"\n"), message["d"]["content"])  # 匹配一共多少行
                         if split_message:
                             if split_message_type[-1] == "Q":
