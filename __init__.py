@@ -444,6 +444,7 @@ class KookBot:
                     self.gpt_user[name][0].pop(now)
                     now = 1 + len(self.gpt_user[name][0])
                 self.gpt_user[name][7] = False
+                self.gpt_user[name][6] = False
             else:
                 user_time = 0  # 收到消息重置计数
                 now = len(self.gpt_user[name][0]) + 1  # 记录此时的消息数，如果在运行时有消息传进来，那么也会使得下一轮循环的now不等于self.gpt_user[name][0]消息队列中的消息数量
