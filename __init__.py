@@ -15,9 +15,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 class KookBot:
     def __init__(self):
         """初始化变量"""
-        # openai.proxy = {
-        #     "http": "http://127.0.0.1:3503",  # 代理
-        # }
+        openai.proxy = {
+            "http": "http://127.0.0.1:3503",  # 代理
+        }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
@@ -60,6 +60,14 @@ class KookBot:
         self.hello = False
         self.message_handler = asyncio.get_event_loop()
         self.message_handler_is_running = False
+        self.help_message = """基本用法：\n@机器人 + {some_message_to_send} \n
+                                    如果没带任何参数就会返回本消息\n
+                                    m\t获得一张图片，请在给出该选项后输入对图片的描述\n
+                                    q\t退出gpt模式\n
+                                    h\t返回此帮助\n
+                                    u\t开启上下文模式\n
+                                    e\t上下文调教模式\n
+                                    eh\t上下文调教模式帮助"""
 
     def get_my_information(self):
         self.targetUrl = self.baseUrl + self.api["me"]
@@ -107,21 +115,6 @@ class KookBot:
         else:
             print("{}   收到服务器发来的消息：{}".format(str(datetime.datetime.now())[0:-7], message))
 
-    async def after_connecting(self):
-        while self.now_status == "has_connected":
-            message = await self.getmessage(self.websocket)
-            # self.dealmessage(message)
-            # await self.websocket.recv()
-            # message = {"s":3}
-            if message["s"] == 5:
-                pass   # 写重连函数，先留空，给嗷呜留着❤
-            if message["s"] != 3:
-                if message["s"] == 0:
-                    self.messageQueue.put(message)
-            else:
-                self.pong = True
-        self.recv_message = False
-
     async def connectGateway(self, url):
         try:
             return await websockets.connect(url)
@@ -132,7 +125,6 @@ class KookBot:
         sleepTime = pow(2, self.slotTimes)
         # sleepTime = pow(2, self.slotTimes)
         await asyncio.sleep(sleepTime)
-
 
     async def receiving_message(self, websocket):
         while self.now_status != "init" and self.recv_message:
@@ -148,6 +140,8 @@ class KookBot:
                     if self.sn >= message["sn"]:  # 在接受到已经处理过的消息的时候选择不处理
                         continue
                     self.sn += 1
+                    if self.sn == 65535:
+                        self.sn = 0
                     self.messageQueue.put(message)
                 elif message["s"] == 5:
                     pass                        # 写重连函数，先留空，给嗷呜留着❤
@@ -188,15 +182,7 @@ class KookBot:
                     else:  # 如果只艾特没消息，直接post消息并continue循环
                         self.json = {
                             "target_id": message["d"]["target_id"],
-                            "content": "基本用法：\n"
-                                       "@机器人 + {some_message_to_send} \n"
-                                       "如果没带任何参数就会返回本消息\n"
-                                       "m\t获得一张图片，请在给出该选项后输入对图片的描述\n"
-                                       "q\t退出gpt模式\n"
-                                       "h\t返回此帮助\n"
-                                       "u\t开启上下文模式\n"
-                                       "e\t上下文调教模式\n"
-                                       "eh\t上下文调教模式帮助",
+                            "content": self.help_message,
                             "quote": message["d"]["msg_id"]  # 取最后一条
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
@@ -240,14 +226,7 @@ class KookBot:
                     elif message["d"]["content"].strip(" ") == "h":
                         self.json = {
                             "target_id": message["d"]["target_id"],
-                            "content": "基本用法：\n"
-                                       "@机器人 + {some_message_to_send} \n"
-                                       "如果没带任何参数就会返回本消息\n"
-                                       "q\t退出gpt模式\n"
-                                       "h\t返回此帮助\n"
-                                       "u\t开启上下文模式\n"
-                                       "e\t上下文调教模式\n"
-                                       "eh\t上下文调教模式帮助",
+                            "content": self.help_message,
                             "quote": message["d"]["msg_id"]
                         }
                         self.targetUrl = self.baseUrl + self.api["send_message"]
@@ -609,10 +588,10 @@ class KookBot:
 
     def connect(self):
         # loop = asyncio.get_event_loop()
-        if self.token == "":
+        if self.token.strip(" ") == "Bot":
             print("请填写机器人token")
             return
-        elif openai.api_key == "":
+        elif openai.api_key.strip(" ") == "":
             print("请填写openai.api_key")
             return
         self.get_my_information()
