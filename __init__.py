@@ -294,7 +294,7 @@ class KookBot:
                                         elif split_message_type[i].strip(" ") == "A":
                                             self.gpt_user[message["d"]["author_id"]][5][1].append(
                                                 {"role": "assistant", "content": split_message[i].strip(" ")})
-                                    self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
+                                    # self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
                                 else:
                                     self.json = {
                                         "target_id": message["d"]["target_id"],
@@ -339,13 +339,8 @@ class KookBot:
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
-                            self.gpt_user[message["d"]["author_id"]][0] = self.gpt_user[message["d"]["author_id"]][5][1]
-                    elif not self.gpt_user[message["d"]["author_id"]][1]:
-                        self.gpt_user[message["d"]["author_id"]][0].append(
-                            {"role": "user", "content": message["d"]["content"].strip(" ")})
-                        self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
-                        self.gpt_user[message["d"]["author_id"]][1] = asyncio.get_event_loop().create_task(
-                            self.running_gpt(message["d"]["author_id"]))  # 启动
+                            self.gpt_user[message["d"]["author_id"]][0] = copy.deepcopy(self.gpt_user[message["d"]["author_id"]][5][1])
+                            self.gpt_user[message["d"]["author_id"]][5][1].clear()
                     else:
                         if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
                             self.json = {
@@ -358,9 +353,15 @@ class KookBot:
                             self.gpt_user[message["d"]["author_id"]][1].cancel()
                             self.gpt_user.pop(message["d"]["author_id"])
                             continue
-                        self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
+                        # self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
-
+                    if not self.gpt_user[message["d"]["author_id"]][1]:
+                        # self.gpt_user[message["d"]["author_id"]][0].append(
+                            # {"role": "user", "content": message["d"]["content"].strip(" ")})
+                        # self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
+                        self.gpt_user[message["d"]["author_id"]][1] = asyncio.get_event_loop().create_task(
+                            self.running_gpt(message["d"]["author_id"]))  # 启动\
+                    self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
 
                 # elif "gpt" in message["d"]["content"]:  # 对每一个调用的人创建一个异步函数,传入使用者的姓名
                 # else:
@@ -413,7 +414,7 @@ class KookBot:
                             self.json = {
                                 "target_id": self.gpt_user[name][3],
                                 "content": result,
-                                "quote": self.gpt_user[name][2][-2]
+                                "quote": self.gpt_user[name][2][-2]  # 引用取倒数第二条
                             }
                             self.gpt_user[name][5][0] = False   # 关闭
                     else:
@@ -431,7 +432,7 @@ class KookBot:
                     if now == len(self.gpt_user[name][0]) + 1:  # 如果没有新消息，直接加入结果
                         self.gpt_user[name][0].append({"role": "assistant", "content": result})
                     else:
-                        self.gpt_user[name][0].insert({"role": "assistant", "content": result}, now - 1)  # 保证新消息是最后一个,至于为什么是now-1，自己仔细想一下
+                        self.gpt_user[name][0].insert(now - 1, {"role": "assistant", "content": result})  # 保证新消息是最后一个,至于为什么是now-1，自己仔细想一下
                 except Exception as e:
                     print(e)
                     break
