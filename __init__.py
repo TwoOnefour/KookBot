@@ -10,11 +10,14 @@ import queue
 import gptapi
 import openai
 import re
-
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 class KookBot:
     def __init__(self):
         """初始化变量"""
+        # openai.proxy = {
+        #     "http": "http://127.0.0.1:3503",  # 代理
+        # }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
@@ -28,8 +31,9 @@ class KookBot:
         self.recv_message = False  #  是否连接后第一次启动after_connecting()方法
         self.websocket = None  # websocket对象
         self.send_message = {}  # 发送给服务器的消息
+        self.token = "Bot " + self.token
         self.headers = {
-            "Authorization": "Bot {}".format(self.token),  # 请求头拼接token
+            "Authorization": "{}".format(self.token),  # 请求头拼接token
             "Content-type": "application/json",
         }
         self.baseUrl = "https://www.kookapp.cn"
@@ -40,7 +44,8 @@ class KookBot:
             "stream": "/api/v3/asset/create",
             "gateway": "/api/v3/gateway/index",
             "send_message": "/api/v3/message/create",
-            "me": "/api/v3/user/me"
+            "me": "/api/v3/user/me",
+            "asset": "/api/v3/asset/create"
         }  # api列表
         self.targetUrl = None  # requests的目标url
         self.json = None  # requests的json
@@ -123,7 +128,7 @@ class KookBot:
         except Exception as e:
             print(e)
 
-    async def dealerror(self): # 处理失败函数
+    async def dealerror(self):  # 处理失败函数
         sleepTime = pow(2, self.slotTimes)
         # sleepTime = pow(2, self.slotTimes)
         await asyncio.sleep(sleepTime)
@@ -186,6 +191,7 @@ class KookBot:
                             "content": "基本用法：\n"
                                        "@机器人 + {some_message_to_send} \n"
                                        "如果没带任何参数就会返回本消息\n"
+                                       "m\t获得一张图片，请在给出该选项后输入对图片的描述\n"
                                        "q\t退出gpt模式\n"
                                        "h\t返回此帮助\n"
                                        "u\t开启上下文模式\n"
@@ -200,7 +206,7 @@ class KookBot:
                         continue
                     # 这里艾特过程初始化启动，改了一下
                     if not self.gpt_user.get(message["d"]["author_id"]):
-                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], False]
+                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], False, [False, ""]]
 
                 else:
                     continue
@@ -216,6 +222,21 @@ class KookBot:
                         self.gpt_user[message["d"]["author_id"]][1].cancel()
                         self.gpt_user.pop(message["d"]["author_id"])
                         continue
+                    elif message["d"]["content"].strip(" ") == "m":
+                        if not self.gpt_user[message["d"]["author_id"]][7][0]:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "接下来请你描述一下图片",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                            self.gpt_user[message["d"]["author_id"]][7][0] = True
+                        else:
+                            self.gpt_user[message["d"]["author_id"]][0].append(message["d"]["content"].strip(" "))
+                        # self.gpt_user[message["d"]["author_id"]][1].cancel()
+                        # self.gpt_user.pop(message["d"]["author_id"])
+
                     elif message["d"]["content"].strip(" ") == "h":
                         self.json = {
                             "target_id": message["d"]["target_id"],
@@ -377,7 +398,7 @@ class KookBot:
                     # [4]是是否开启上下文模式
                     # [5]调教模式 结构为[boolean, [json_message]]
                     # [6]是否正在运行
-
+                    # [7]是否生成图片
     async def running_gpt(self, name):
         now = 0
         user_time = 0  # 用于计数用户多久没有发送消息
@@ -396,6 +417,33 @@ class KookBot:
                         await asyncio.sleep(1)
                     self.postmessage("POST")
                     break
+            elif self.gpt_user[name][7][0]:  # 图片
+                self.gpt_user[name][6] = True
+                now = len(self.gpt_user[name][0])
+                result = await gptapi.create_image_from_GPT(self.gpt_user[name][0][-1]["content"])
+                request_body = MultipartEncoder({
+                    "file": ("{}.jpg".format(self.gpt_user[name][0][-1]["content"]), requests.get(result, verify=False).content, 'multipart/form-data')
+                })
+                headers = {
+                    "Authorization": self.token,
+                    'Content-Type': request_body.content_type
+                }
+                result1 = json.loads(requests.post("{}".format(self.baseUrl + self.api["asset"]), headers=headers, data=request_body, verify=False).text)
+                self.json = {
+                    "target_id": self.gpt_user[name][3],
+                    "content": result1["data"]["url"],
+                    "quote": self.gpt_user[name][2][-1],
+                    "type": 2
+                }
+                self.targetUrl = self.baseUrl + self.api["send_message"]
+                self.postmessage("POST")
+                if now == len(self.gpt_user[name][0]):
+                    self.gpt_user[name][0].pop(-1)
+                    now = len(self.gpt_user[name][0])
+                else:
+                    self.gpt_user[name][0].pop(now)
+                    now = 1 + len(self.gpt_user[name][0])
+                self.gpt_user[name][7] = False
             else:
                 user_time = 0  # 收到消息重置计数
                 now = len(self.gpt_user[name][0]) + 1  # 记录此时的消息数，如果在运行时有消息传进来，那么也会使得下一轮循环的now不等于self.gpt_user[name][0]消息队列中的消息数量
@@ -436,6 +484,7 @@ class KookBot:
                 except Exception as e:
                     print(e)
                     break
+
         self.gpt_user.pop(name)  # 退出时弹出该用户数据
 
     async def connection(self):
