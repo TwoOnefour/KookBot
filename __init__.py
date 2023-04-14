@@ -15,9 +15,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 class KookBot:
     def __init__(self):
         """初始化变量"""
-        openai.proxy = {
-            "http": "http://127.0.0.1:3503",  # 代理
-        }
+        # openai.proxy = {
+        #     "http": "http://127.0.0.1:3503",  # 代理
+        # }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
@@ -60,14 +60,8 @@ class KookBot:
         self.hello = False
         self.message_handler = asyncio.get_event_loop()
         self.message_handler_is_running = False
-        self.help_message = """基本用法：\n@机器人 + {some_message_to_send} \n
-                                    如果没带任何参数就会返回本消息\n
-                                    m\t获得一张图片，请在给出该选项后输入对图片的描述\n
-                                    q\t退出gpt模式\n
-                                    h\t返回此帮助\n
-                                    u\t开启上下文模式\n
-                                    e\t上下文调教模式\n
-                                    eh\t上下文调教模式帮助"""
+        self.help_message = """基本用法：\n@机器人 + {some_message_to_send} 
+        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助 """
 
     def get_my_information(self):
         self.targetUrl = self.baseUrl + self.api["me"]
