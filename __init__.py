@@ -15,14 +15,14 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 class KookBot:
     def __init__(self):
         """初始化变量"""
-        openai.proxy = {
-            "http": "http://127.0.0.1:3503",  # 代理
-        }
+        # openai.proxy = {
+        #     "http": "http://127.0.0.1:3503",  # 代理
+        # }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
-        self.token = "1/MTY1MTg=/yOn0026C4i4b8zci7X99dQ=="  # 机器人id
-        openai.api_key = "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"
+        self.token = ""  # 机器人id
+        openai.api_key = ""
         self.gpt_user = {}  # gpt当前使用用户
         self.resume_OK = False # 是否resume成功
         self.sn = 0  # sn消息数量
