@@ -496,10 +496,10 @@ class KookBot:
                 if self.resume:  # 是否从time_out返回
                     try:
                         response = asyncio.gather(asyncio.get_event_loop().create_task(self.countdowntime(6)))
-                        await self.websocket.send({
+                        await self.websocket.send(json.dumps({
                             "s": 2,
                             "sn": self.sn
-                        })
+                        }))
                         self.dealmessage({
                             "s": 2,
                             "sn": self.sn
@@ -519,6 +519,7 @@ class KookBot:
                         if self.slotTimes == 3:
                             self.resume = False
                             self.now_status = "init"
+                            self.sn = 0
                             self.slotTimes = 0
                         continue
                     self.resume_OK = True
@@ -555,7 +556,7 @@ class KookBot:
                     "s": 2,
                     "sn": self.sn
                 }
-                self.websocket.send(json.dumps(self.send_message))
+                await self.websocket.send(json.dumps(self.send_message))
                 self.pong = False
                 if self.pong:
                     self.now_status = "has_connected"
