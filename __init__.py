@@ -380,15 +380,15 @@ class KookBot:
                 await asyncio.sleep(1)
                 user_time += 1
                 if user_time >= 120:
-                    self.json = {
-                        "target_id": self.gpt_user[name][3],
-                        "content": "已经2分钟没有输入消息，已自动退出",
-                        "quote": self.gpt_user[name][2][-1]
-                    }
-                    self.targetUrl = self.baseUrl + self.api["send_message"]
-                    while self.now_status != "has_connected":
-                        await asyncio.sleep(1)
-                    self.postmessage("POST")
+                    # self.json = {
+                    #     "target_id": self.gpt_user[name][3],
+                    #     "content": "已经2分钟没有输入消息，已自动退出",
+                    #     "quote": self.gpt_user[name][2][-1]
+                    # }
+                    # self.targetUrl = self.baseUrl + self.api["send_message"]
+                    # while self.now_status != "has_connected":
+                    #     await asyncio.sleep(1)
+                    # self.postmessage("POST")
                     break
             elif self.gpt_user[name][7][0]:  # 图片
                 self.gpt_user[name][6] = True
