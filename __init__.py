@@ -16,7 +16,7 @@ class KookBot:
     def __init__(self):
         """初始化变量"""
         # openai.proxy = {
-        #     "http": "http://127.0.0.1:3503",  # 代理
+        #     "http": "http://127.0.0.1:11954",  # 代理
         # }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
@@ -45,7 +45,13 @@ class KookBot:
             "gateway": "/api/v3/gateway/index",
             "send_message": "/api/v3/message/create",
             "me": "/api/v3/user/me",
-            "asset": "/api/v3/asset/create"
+            "asset": "/api/v3/asset/create",
+            "game_list": "/api/v3/game",
+            "game_create": "/api/v3/game/create",
+            "game_update": "/api/v3/game/update",
+            "game_delete": "/api/v3/game/delete",
+            "game_activity": "/api/v3/game/activity",
+            "game_delete_activity": "/api/v3/game/delete_activity"
         }  # api列表
         self.targetUrl = None  # requests的目标url
         self.json = None  # requests的json
@@ -394,14 +400,7 @@ class KookBot:
                 self.gpt_user[name][6] = True
                 now = len(self.gpt_user[name][0])
                 result = await gptapi.create_image_from_GPT(self.gpt_user[name][0][-1]["content"])
-                request_body = MultipartEncoder({
-                    "file": ("{}.jpg".format(self.gpt_user[name][0][-1]["content"]), requests.get(result, verify=False).content, 'multipart/form-data')
-                })
-                headers = {
-                    "Authorization": self.token,
-                    'Content-Type': request_body.content_type
-                }
-                result1 = json.loads(requests.post("{}".format(self.baseUrl + self.api["asset"]), headers=headers, data=request_body, verify=False).text)
+                result1 = self.update_image(self.gpt_user[name][0][-1]["content"], result)
                 self.json = {
                     "target_id": self.gpt_user[name][3],
                     "content": result1["data"]["url"],
@@ -597,6 +596,17 @@ class KookBot:
     def playmusic(self):
         # self.targetUrl = "{}{}".format(self.baseUrl, self.api["stream"])
         pass
+
+    def update_image(self, name, url):
+        request_body = MultipartEncoder({
+            "file": ("{}.jpg".format(name), requests.get(url, verify=False).content,
+                     'multipart/form-data')
+        })
+        headers = {
+            "Authorization": self.token,
+            'Content-Type': request_body.content_type
+        }
+        return json.loads(requests.post("{}".format(self.baseUrl + self.api["asset"]), headers=headers, data=request_body, verify=False).text)
 
     def postmessage(self, method):
         if method == "POST":
