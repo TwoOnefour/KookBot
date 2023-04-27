@@ -67,7 +67,7 @@ class KookBot:
         self.message_handler = asyncio.get_event_loop()
         self.message_handler_is_running = False
         self.help_message = """基本用法：\n@机器人 + {some_message_to_send} 
-        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助 """
+        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助\h个人公众号请移步微信搜索晴芯"""
 
     def get_my_information(self):
         self.targetUrl = self.baseUrl + self.api["me"]
