@@ -51,6 +51,7 @@ class Game(KookBot):
         return json.loads(result.text)["message"]
 
     def run(self):
+        # print(self.get_game("0"))
         # self.create_game("星穹轨道")  # 创建游戏（游戏名， 图标链接），好像没什么用
         # self.get_game("2")  # 获得游戏列表 好像也没什么用，因为只会返回一点点信息
         # self.update_game(53, name="崩坏：星穹轨道")  # 不知道干嘛的
