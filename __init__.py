@@ -67,7 +67,7 @@ class KookBot:
         self.message_handler = asyncio.get_event_loop()
         self.message_handler_is_running = False
         self.help_message = """基本用法：\n@机器人 + {some_message_to_send} 
-        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助\h个人公众号请移步微信搜索晴芯"""
+        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式(已经废除，输入q会直接送达给gpt)\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助\n个人公众号请移步微信搜索晴芯"""
 
     def get_my_information(self):
         self.targetUrl = self.baseUrl + self.api["me"]
@@ -197,18 +197,18 @@ class KookBot:
                 else:
                     continue
                 if self.gpt_user.get(message["d"]["author_id"]):
-                    if message["d"]["content"].strip(" ") == "q":
-                        self.json = {
-                            "target_id": message["d"]["target_id"],
-                            "content": "已退出gpt聊天",
-                            "quote": message["d"]["msg_id"]
-                        }
-                        self.targetUrl = self.baseUrl + self.api["send_message"]
-                        self.postmessage("POST")
-                        self.gpt_user[message["d"]["author_id"]][1].cancel()
-                        self.gpt_user.pop(message["d"]["author_id"])
-                        continue
-                    elif message["d"]["content"].strip(" ") == "m":
+                    # if message["d"]["content"].strip(" ") == "q":
+                    #     self.json = {
+                    #         "target_id": message["d"]["target_id"],
+                    #         "content": "已退出gpt聊天",
+                    #         "quote": message["d"]["msg_id"]
+                    #     }
+                    #     self.targetUrl = self.baseUrl + self.api["send_message"]
+                    #     self.postmessage("POST")
+                    #     self.gpt_user[message["d"]["author_id"]][1].cancel()
+                    #     self.gpt_user.pop(message["d"]["author_id"])
+                    #     continue
+                    if message["d"]["content"].strip(" ") == "m":
                         if not self.gpt_user[message["d"]["author_id"]][7][0]:
                             self.json = {
                                 "target_id": message["d"]["target_id"],
