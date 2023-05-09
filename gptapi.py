@@ -26,3 +26,11 @@ async def create_image_from_GPT(message):
         size="512x512"
     )
     return completion.data[0]["url"]
+
+async def edit_text(message, instruction):
+    completion = await openai.Edit.acreate(
+        model="text-davinci-edit-001",
+        input=message,
+        instruction=instruction
+    )
+    return completion.choices[0]["text"]

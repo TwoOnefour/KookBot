@@ -15,9 +15,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 class KookBot:
     def __init__(self):
         """初始化变量"""
-        # openai.proxy = {
-        #     "http": "http://127.0.0.1:11954",  # 代理
-        # }
+        openai.proxy = {
+            "http": "http://127.0.0.1:1299",  # 代理
+        }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
@@ -67,7 +67,7 @@ class KookBot:
         self.message_handler = asyncio.get_event_loop()
         self.message_handler_is_running = False
         self.help_message = """基本用法：\n@机器人 + {some_message_to_send} 
-        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式(已经废除，输入q会直接送达给gpt)\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助\n个人公众号请移步微信搜索晴芯"""
+        \n如果没带任何参数就会返回本消息\nm\t获得一张图片，请在给出该选项后输入对图片的描述\nq\t退出gpt模式(已经废除，输入q会直接送达给gpt)\nh\t返回此帮助\nu\t开启上下文模式\ne\t上下文调教模式\neh\t上下文调教模式帮助\ned\t文字修改模式\n个人公众号请移步微信搜索晴芯"""
 
     def get_my_information(self):
         self.targetUrl = self.baseUrl + self.api["me"]
@@ -192,8 +192,17 @@ class KookBot:
                         continue
                     # 这里艾特过程初始化启动，改了一下
                     if not self.gpt_user.get(message["d"]["author_id"]):
-                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], False, [False, ""]]
-
+                        self.gpt_user[message["d"]["author_id"]] = [[], None, [], message["d"]["target_id"], False, [False, []], False, [False, ""], [False, ["", ""]]]  # gpt用户数据结构定义
+                        # 创建一个数据结构，格式如下，self.gpt_user[name]
+                        # [0]是和gpt的对话消息用于实现上下文，
+                        # [1]是该异步函数的对象用于退出,
+                        # [2]是消息msg_id的list,用于引用回复当前消息或者上一条消息
+                        # [3]是消息频道，用于返回gpt消息时回复该消息所在频道
+                        # [4]是否开启上下文模式
+                        # [5]调教模式 结构为[boolean, [json_message]]
+                        # [6]是否正在运行
+                        # [7]是否生成图片
+                        # [8][0]是否开启test_edit模式,[8][1]为消息暂存
                 else:
                     continue
                 if self.gpt_user.get(message["d"]["author_id"]):
@@ -319,6 +328,27 @@ class KookBot:
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
+                    elif self.gpt_user[message["d"]["author_id"]][8][0] and message["d"]["content"].strip(" ") != "ed":
+                        if self.gpt_user[message["d"]["author_id"]][8][1][0] == "":
+                            self.gpt_user[message["d"]["author_id"]][8][1][0] = message["d"]["content"]
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "请发送修改指导，如：修正文字顺序",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                        else:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "已发送，请等待结果",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                            self.gpt_user[message["d"]["author_id"]][8][1][1] = message["d"]["content"]
+                            self.gpt_user[message["d"]["author_id"]][0].append(
+                                copy.deepcopy(self.gpt_user[message["d"]["author_id"]][8][1]))
 
                     elif message["d"]["content"].strip(" ") == "e":
                         if not self.gpt_user[message["d"]["author_id"]][5][0]:
@@ -341,18 +371,39 @@ class KookBot:
                             self.postmessage("POST")
                             self.gpt_user[message["d"]["author_id"]][0] = copy.deepcopy(self.gpt_user[message["d"]["author_id"]][5][1])
                             self.gpt_user[message["d"]["author_id"]][5][1].clear()
-                    else:
-                        if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
+                    elif message["d"]["content"].strip(" ") == "ed":
+                        if not self.gpt_user[message["d"]["author_id"]][8][0]:
                             self.json = {
                                 "target_id": message["d"]["target_id"],
-                                "content": "目前限制为10句话，已经自动退出gpt聊天",
+                                "content": "文字修改模式开启，请发送你要修改的文字。注意，此功能对中文支持不是很好😥。输入ed退出该模式",
                                 "quote": message["d"]["msg_id"]
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
                             self.postmessage("POST")
-                            self.gpt_user[message["d"]["author_id"]][1].cancel()
-                            self.gpt_user.pop(message["d"]["author_id"])
-                            continue
+                            self.gpt_user[message["d"]["author_id"]][8][0] = True
+                        # self.gpt_user.pop(message["d"]["author_id"])
+                        else:
+                            self.json = {
+                                "target_id": message["d"]["target_id"],
+                                "content": "文字修改模式关闭",
+                                "quote": message["d"]["msg_id"]
+                            }
+                            self.targetUrl = self.baseUrl + self.api["send_message"]
+                            self.postmessage("POST")
+                            self.gpt_user[message["d"]["author_id"]][8] = [False, ["", ""]]
+                            self.gpt_user[message['d']["author_id"]][0] = []
+                    else:
+                        # if len(self.gpt_user[message["d"]["author_id"]][0]) > 10:
+                        #     self.json = {
+                        #         "target_id": message["d"]["target_id"],
+                        #         "content": "目前限制为10句话，已经自动退出gpt聊天",
+                        #         "quote": message["d"]["msg_id"]
+                        #     }
+                        #     self.targetUrl = self.baseUrl + self.api["send_message"]
+                        #     self.postmessage("POST")
+                        #     self.gpt_user[message["d"]["author_id"]][1].cancel()
+                        #     self.gpt_user.pop(message["d"]["author_id"])
+                        #     continue
                         # self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
                         self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"]})
                     if not self.gpt_user[message["d"]["author_id"]][1]:
@@ -369,15 +420,7 @@ class KookBot:
                 #     self.gpt_user[message["d"]["author_id"]][0].append({"role": "user", "content": message["d"]["content"].strip(" ")})
                 #     self.gpt_user[message["d"]["author_id"]][2].append(message["d"]["msg_id"])
                 #     self.gpt_user[message["d"]["author_id"]][1] = asyncio.get_event_loop().create_task(self.running_gpt(message["d"]["author_id"]))  # 启动
-                    # 创建一个数据结构，格式如下，self.gpt_user[name]
-                    # [0]是和gpt的对话消息用于实现上下文，
-                    # [1]是该异步函数的对象用于退出,
-                    # [2]是消息msg_id的list,用于引用回复当前消息或者上一条消息
-                    # [3]是消息频道，用于返回gpt消息时回复该消息所在频道
-                    # [4]是是否开启上下文模式
-                    # [5]调教模式 结构为[boolean, [json_message]]
-                    # [6]是否正在运行
-                    # [7]是否生成图片
+
     async def running_gpt(self, name):
         now = 0
         user_time = 0  # 用于计数用户多久没有发送消息
@@ -417,6 +460,26 @@ class KookBot:
                     now = 1 + len(self.gpt_user[name][0])
                 self.gpt_user[name][7][0] = False
                 self.gpt_user[name][6] = False
+            elif self.gpt_user[name][8][0]:  # text_edit
+                self.gpt_user[name][6] = True
+                now = len(self.gpt_user[name][0])
+                result = await gptapi.edit_text(self.gpt_user[name][0][-1][0], self.gpt_user[name][0][-1][1])
+                # result1 = self.update_image(self.gpt_user[name][0][-1]["content"], result)
+                self.json = {
+                    "target_id": self.gpt_user[name][3],
+                    "content": result,
+                    "quote": self.gpt_user[name][2][-1]
+                }
+                self.targetUrl = self.baseUrl + self.api["send_message"]
+                self.postmessage("POST")
+                if now == len(self.gpt_user[name][0]):
+                    self.gpt_user[name][0].pop(-1)
+                    now = len(self.gpt_user[name][0])
+                else:
+                    self.gpt_user[name][0].pop(now)
+                    now = 1 + len(self.gpt_user[name][0])
+                self.gpt_user[name][6] = False
+                self.gpt_user[name][8][1] = ["", ""]
             else:
                 user_time = 0  # 收到消息重置计数
                 now = len(self.gpt_user[name][0]) + 1  # 记录此时的消息数，如果在运行时有消息传进来，那么也会使得下一轮循环的now不等于self.gpt_user[name][0]消息队列中的消息数量
