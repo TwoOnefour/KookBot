@@ -15,9 +15,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 class KookBot:
     def __init__(self):
         """初始化变量"""
-        openai.proxy = {
-            "http": "http://127.0.0.1:1299",  # 代理
-        }
+        # openai.proxy = {
+        #     "http": "http://127.0.0.1:1299",  # 代理
+        # }
         self.author_id = None  # 机器人自身聊天id
         self.client_Id = ""  # 机器人id
         self.client_Secret = ""  # 机器人id
