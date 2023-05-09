@@ -375,7 +375,7 @@ class KookBot:
                         if not self.gpt_user[message["d"]["author_id"]][8][0]:
                             self.json = {
                                 "target_id": message["d"]["target_id"],
-                                "content": "文字修改模式开启，请发送你要修改的文字。注意，此功能对中文支持不是很好😥。输入ed退出该模式",
+                                "content": "文字修改模式开启，请发送你要修改的文字。输入ed退出该模式",
                                 "quote": message["d"]["msg_id"]
                             }
                             self.targetUrl = self.baseUrl + self.api["send_message"]
