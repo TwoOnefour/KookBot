@@ -12,7 +12,6 @@ import openai
 import re
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
-
 class KookBot:
     def __init__(self):
         """初始化变量"""
