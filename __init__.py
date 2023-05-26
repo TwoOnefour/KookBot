@@ -161,7 +161,7 @@ class KookBot:
 
                 if message["d"]["type"] == 255 or message["d"]["author_id"] == self.author_id or message["d"]["extra"].get("mention_all"):  # 如果接受到机器人消息或者艾特全员直接跳过
                     continue
-                if message["d"]["extra"]["mention"] == ["{}".format(self.author_id)]:
+                if message["d"]["extra"].get("mention") == ["{}".format(self.author_id)]:
                     if self.gpt_user.get(message["d"]["author_id"]):
                         if self.gpt_user.get(message["d"]["author_id"])[6]:
                             self.json = {
