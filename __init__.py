@@ -202,7 +202,7 @@ class KookBot:
                         # [5]调教模式 结构为[boolean, [json_message]]
                         # [6]是否正在运行
                         # [7]是否生成图片
-                        # [8][0]是否开启text_edit模式,[8][1]为消息暂存
+                        # [8][0]是否开启test_edit模式,[8][1]为消息暂存
                 else:
                     continue
                 if self.gpt_user.get(message["d"]["author_id"]):
@@ -541,7 +541,7 @@ class KookBot:
                     if not self.pong or not response[0]:
                         self.now_status = "time_out"
                         continue
-                    await asyncio.sleep(25)  # 30秒计时器,建议提前一点，我使用了25秒
+                    await asyncio.sleep(30)  # 30秒计时器
                 except Exception as e:
                     self.now_status = "time_out"
                     print(e)
