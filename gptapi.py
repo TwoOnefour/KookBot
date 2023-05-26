@@ -27,6 +27,7 @@ async def create_image_from_GPT(message):
     )
     return completion.data[0]["url"]
 
+
 async def edit_text(message, instruction):
     completion = await openai.Edit.acreate(
         model="text-davinci-edit-001",
